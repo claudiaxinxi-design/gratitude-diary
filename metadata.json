@@ -1,0 +1,7 @@
+{
+  "name": "The Gratitude Diary",
+  "description": "A meditative, hand-drawn gratitude journal where every entry restores life to a barren landscape.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
