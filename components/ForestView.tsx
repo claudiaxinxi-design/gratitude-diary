@@ -46,31 +46,37 @@ export const ForestView: React.FC<ForestViewProps> = ({ entries }) => {
   const monthName = viewDate.toLocaleString('default', { month: 'long' });
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#F7F7F5] overflow-y-auto w-full">
+    <div className="flex-1 flex flex-col h-full bg-[#F7F7F5] overflow-y-auto w-full no-scrollbar">
       <div className="p-6 pb-4 flex justify-between items-center w-full">
         <div className="space-y-1">
           <h2 className="text-2xl font-semibold text-[#37352F]">Calendar</h2>
-          <p className="text-[#787774] text-sm">Your traces through time.</p>
+          <p className="text-[#787774] text-xs font-medium opacity-80 uppercase tracking-widest">Traces of Gratitude</p>
         </div>
       </div>
 
       <div className="px-6 flex items-center justify-between mb-4 w-full">
         <div className="flex flex-col">
-          <h3 className="text-lg font-bold text-[#37352F]">{monthName}</h3>
+          <h3 className="text-xl font-bold text-[#37352F] tracking-tight">{monthName}</h3>
           <span className="text-[10px] text-[#A1A1A1] uppercase tracking-[0.2em] font-black">{viewYear}</span>
         </div>
-        <div className="flex space-x-1">
-          <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-white notion-border rounded-md text-[#787774] notion-shadow bg-transparent">
+        <div className="flex space-x-2">
+          <button 
+            onClick={() => changeMonth(-1)} 
+            className="p-2.5 hover:bg-white notion-border rounded-xl text-[#787774] notion-shadow bg-transparent transition-all active:scale-95"
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
-          <button onClick={() => changeMonth(1)} className="p-2 hover:bg-white notion-border rounded-md text-[#787774] notion-shadow bg-transparent">
+          <button 
+            onClick={() => changeMonth(1)} 
+            className="p-2.5 hover:bg-white notion-border rounded-xl text-[#787774] notion-shadow bg-transparent transition-all active:scale-95"
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
         </div>
       </div>
 
-      <div className="px-6 mb-8 w-full">
-        <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-[#787774] mb-2 uppercase tracking-widest w-full opacity-40">
+      <div className="px-6 mb-8 w-full animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-[#787774] mb-3 uppercase tracking-widest w-full opacity-40">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d}>{d}</div>)}
         </div>
         <div className="grid grid-cols-7 gap-2 w-full">
@@ -87,22 +93,21 @@ export const ForestView: React.FC<ForestViewProps> = ({ entries }) => {
             >
               {d?.day}
               {d?.entry && (
-                <span className="absolute bottom-1 w-1 h-1 bg-[#37352F] rounded-full opacity-20"></span>
+                <span className="absolute bottom-1.5 w-1 h-1 bg-[#37352F] rounded-full opacity-30"></span>
               )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Year Switcher at bottom of page */}
-      <div className="mt-auto px-6 py-8 border-t border-[#E9E9E7] flex flex-col items-center space-y-4 bg-white/50">
-         <p className="text-[10px] text-[#A1A1A1] uppercase tracking-[0.2em] font-bold">Switch Year</p>
-         <div className="flex items-center space-x-6">
-            <button onClick={() => changeYear(-1)} className="p-3 bg-white notion-border notion-shadow rounded-full text-[#37352F] hover:bg-[#F1F1EF] transition-colors">
+      <div className="mt-auto px-6 py-10 border-t border-[#E9E9E7] flex flex-col items-center space-y-4 bg-white/50">
+         <p className="text-[10px] text-[#A1A1A1] uppercase tracking-[0.2em] font-bold opacity-60">Switch Year</p>
+         <div className="flex items-center space-x-8">
+            <button onClick={() => changeYear(-1)} className="p-3 bg-white notion-border notion-shadow rounded-2xl text-[#37352F] hover:bg-[#F1F1EF] transition-all active:scale-90">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
-            <span className="text-2xl font-bold text-[#37352F] tracking-tighter">{viewYear}</span>
-            <button onClick={() => changeYear(1)} className="p-3 bg-white notion-border notion-shadow rounded-full text-[#37352F] hover:bg-[#F1F1EF] transition-colors">
+            <span className="text-3xl font-bold text-[#37352F] tracking-tighter">{viewYear}</span>
+            <button onClick={() => changeYear(1)} className="p-3 bg-white notion-border notion-shadow rounded-2xl text-[#37352F] hover:bg-[#F1F1EF] transition-all active:scale-90">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
          </div>
@@ -111,7 +116,7 @@ export const ForestView: React.FC<ForestViewProps> = ({ entries }) => {
       {detailEntry && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-200" onClick={() => setDetailEntry(null)}>
           <div 
-            className="w-full max-w-sm bg-white rounded-2xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200"
+            className="w-full max-w-sm bg-white rounded-3xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b border-[#F1F1EF] flex flex-col items-center relative text-center">
