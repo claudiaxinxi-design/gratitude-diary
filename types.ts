@@ -5,10 +5,18 @@ export interface Entry {
   dateKey: string;  // Stable YYYY-MM-DD
   createdAt: number;
   answers: string[];
+  categories: string[]; // Added to track explicit category selection
   color: string;
 }
 
 export type Screen = 'HOME' | 'FOREST' | 'PROFILE';
+
+export interface Category {
+  id: string;
+  label: string;
+  emoji: string;
+  usageCount?: number;
+}
 
 export interface FloatingTag {
   id: string;
