@@ -1,7 +1,5 @@
-
 import React, { useMemo, useState } from 'react';
 import { Entry } from '../types';
-import { TAGS } from '../constants';
 import { getDateKey, getMonthTags } from '../utils';
 
 interface ProfileViewProps {
@@ -11,25 +9,41 @@ interface ProfileViewProps {
 export const ProfileView: React.FC<ProfileViewProps> = ({ entries }) => {
   const [reportDate, setReportDate] = useState(new Date());
 
+  // ✅ Derive categories from actual saved entries (single source of truth)
+  // This ensures custom categories also show up in Monthly Seeds.
+  const derivedCategories = useMemo(() => {
+    const set = new Set<string>();
+    entries.forEach((e) => {
+      e.categories?.forEach((c) => set.add(c));
+    });
+    // getMonthTags fallback expects objects with a "label" field
+    return Array.from(set).map((label) => ({ label }));
+  }, [entries]);
+
   const currentMonthTags = useMemo(() => {
-    return getMonthTags(entries, reportDate.getFullYear(), reportDate.getMonth(), TAGS);
-  }, [entries, reportDate]);
+    return getMonthTags(
+      entries,
+      reportDate.getFullYear(),
+      reportDate.getMonth(),
+      derivedCategories as any // keep compatible with your existing getMonthTags signature usage
+    );
+  }, [entries, reportDate, derivedCategories]);
 
   const streak = useMemo(() => {
     if (entries.length === 0) return 0;
     const sorted = [...entries].sort((a, b) => b.createdAt - a.createdAt);
     let count = 0;
     let checkDate = new Date();
-    
+
     // Check if user has entry today
     const todayKey = getDateKey(checkDate);
-    let startIndex = sorted.findIndex(e => e.dateKey === todayKey);
-    
+    let startIndex = sorted.findIndex((e) => e.dateKey === todayKey);
+
     // If no entry today, check if they had one yesterday to keep streak alive
     if (startIndex === -1) {
       checkDate.setDate(checkDate.getDate() - 1);
       const yesterdayKey = getDateKey(checkDate);
-      startIndex = sorted.findIndex(e => e.dateKey === yesterdayKey);
+      startIndex = sorted.findIndex((e) => e.dateKey === yesterdayKey);
     }
 
     if (startIndex === -1) return 0;
@@ -59,12 +73,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ entries }) => {
       <div className="p-6 border-b border-[#E9E9E7] bg-white w-full shadow-sm">
         <h2 className="text-xl font-bold text-[#37352F] tracking-tight">Profile</h2>
       </div>
-      
+
       <div className="flex-1 overflow-y-auto flex flex-col items-center p-8 space-y-10 no-scrollbar pb-24">
         <div className="w-24 h-24 rounded-full bg-[#E1EBDD] flex items-center justify-center text-4xl notion-shadow border-4 border-white animate-in zoom-in duration-700">
           🌿
         </div>
-        
+
         <div className="text-center space-y-2">
           <h3 className="text-xl font-bold text-[#37352F] tracking-tighter">Your Journey</h3>
           <p className="text-sm text-[#787774] max-w-[240px] leading-relaxed mx-auto">
@@ -91,40 +105,47 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ entries }) => {
           <div className="flex flex-col items-center space-y-3">
             <h4 className="text-[10px] font-bold text-[#A1A1A1] uppercase tracking-[0.3em] text-center">Monthly Seeds</h4>
             <div className="flex items-center space-x-6 bg-white notion-border notion-shadow px-4 py-1.5 rounded-full">
-              <button 
-                onClick={() => changeMonth(-1)} 
+              <button
+                onClick={() => changeMonth(-1)}
                 className="p-1 hover:bg-[#F1F1EF] rounded-full text-[#787774] transition-colors"
                 aria-label="Previous Month"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M15 19l-7-7 7-7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
               <span className="text-[10px] font-black text-[#37352F] uppercase tracking-widest min-w-[90px] text-center">
                 {monthLabel}
               </span>
-              <button 
-                onClick={() => changeMonth(1)} 
+              <button
+                onClick={() => changeMonth(1)}
                 className="p-1 hover:bg-[#F1F1EF] rounded-full text-[#787774] transition-colors"
                 aria-label="Next Month"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 5l7 7-7 7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
             </div>
           </div>
-          
+
           <div className="bg-white notion-border rounded-2xl notion-shadow p-6 h-[260px] flex flex-col relative overflow-hidden group">
             <div className="flex-1 flex flex-wrap items-end justify-center gap-2 overflow-y-auto no-scrollbar content-end pb-2">
               {currentMonthTags.length === 0 ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20 pointer-events-none p-8 text-center">
-                   <span className="text-4xl mb-4">🌱</span>
-                   <p className="text-[10px] uppercase tracking-[0.2em] font-black leading-relaxed">No seeds found for this cycle.</p>
+                  <span className="text-4xl mb-4">🌱</span>
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-black leading-relaxed">
+                    No seeds found for this cycle.
+                  </p>
                 </div>
               ) : (
-                currentMonthTags.map((tag, i) => {
-                  const bgColor = tag.count > 3 ? 'bg-[#98B68E]' : tag.count > 1 ? 'bg-[#C8D9C4]' : 'bg-[#E1EBDD]';
+                currentMonthTags.map((tag: any, i: number) => {
+                  const bgColor =
+                    tag.count > 3 ? 'bg-[#98B68E]' : tag.count > 1 ? 'bg-[#C8D9C4]' : 'bg-[#E1EBDD]';
                   const textColor = tag.count > 3 ? 'text-white' : 'text-[#37352F]';
                   return (
-                    <div 
-                      key={tag.label} 
+                    <div
+                      key={tag.label}
                       className={`px-3 py-1.5 ${bgColor} ${textColor} text-[11px] font-bold rounded-xl border border-white/30 animate-in slide-in-from-bottom duration-500 shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-default`}
                       style={{ animationDelay: `${i * 50}ms` }}
                     >
@@ -137,6 +158,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ entries }) => {
             </div>
             <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-white to-transparent pointer-events-none"></div>
           </div>
+
           <div className="flex flex-col items-center space-y-1">
             <p className="text-[9px] text-[#A1A1A1] text-center uppercase tracking-widest font-bold">
               Darker seeds reflect more frequent traces.
