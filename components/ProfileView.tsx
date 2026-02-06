@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Entry } from '../types';
-import { getDateKey, getMonthTags } from '../utils';
+import { getDateKey } from '../utils';
 
 interface ProfileViewProps {
   entries: Entry[];
@@ -9,37 +9,37 @@ interface ProfileViewProps {
 export const ProfileView: React.FC<ProfileViewProps> = ({ entries }) => {
   const [reportDate, setReportDate] = useState(new Date());
 
-  // ✅ Derive categories from actual saved entries (single source of truth)
-  // This ensures custom categories also show up in Monthly Seeds.
-  const derivedCategories = useMemo(() => {
-    const set = new Set<string>();
-    entries.forEach((e) => {
-      e.categories?.forEach((c) => set.add(c));
-    });
-    // getMonthTags fallback expects objects with a "label" field
-    return Array.from(set).map((label) => ({ label }));
-  }, [entries]);
-
+  // ✅ Monthly Seeds: single source of truth = entry.categories
   const currentMonthTags = useMemo(() => {
-    return getMonthTags(
-      entries,
-      reportDate.getFullYear(),
-      reportDate.getMonth(),
-      derivedCategories as any // keep compatible with your existing getMonthTags signature usage
-    );
-  }, [entries, reportDate, derivedCategories]);
+    const year = reportDate.getFullYear();
+    const month = reportDate.getMonth(); // 0-11
+    const prefix = `${year}-${String(month + 1).padStart(2, '0')}`; // e.g. "2026-02"
+
+    const monthlyEntries = entries.filter((e) => (e.dateKey || '').startsWith(prefix));
+    const counts: Record<string, number> = {};
+
+    monthlyEntries.forEach((entry) => {
+      (entry.categories || []).forEach((label) => {
+        if (!label) return;
+        counts[label] = (counts[label] || 0) + 1;
+      });
+    });
+
+    return Object.entries(counts)
+      .map(([label, count]) => ({ label, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [entries, reportDate]);
 
   const streak = useMemo(() => {
     if (entries.length === 0) return 0;
+
     const sorted = [...entries].sort((a, b) => b.createdAt - a.createdAt);
     let count = 0;
     let checkDate = new Date();
 
-    // Check if user has entry today
     const todayKey = getDateKey(checkDate);
     let startIndex = sorted.findIndex((e) => e.dateKey === todayKey);
 
-    // If no entry today, check if they had one yesterday to keep streak alive
     if (startIndex === -1) {
       checkDate.setDate(checkDate.getDate() - 1);
       const yesterdayKey = getDateKey(checkDate);
@@ -103,7 +103,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ entries }) => {
         {/* Seed Box Visual Report */}
         <div className="w-full max-w-sm space-y-4">
           <div className="flex flex-col items-center space-y-3">
-            <h4 className="text-[10px] font-bold text-[#A1A1A1] uppercase tracking-[0.3em] text-center">Monthly Seeds</h4>
+            <h4 className="text-[10px] font-bold text-[#A1A1A1] uppercase tracking-[0.3em] text-center">
+              Monthly Seeds
+            </h4>
+
             <div className="flex items-center space-x-6 bg-white notion-border notion-shadow px-4 py-1.5 rounded-full">
               <button
                 onClick={() => changeMonth(-1)}
@@ -114,9 +117,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ entries }) => {
                   <path d="M15 19l-7-7 7-7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
+
               <span className="text-[10px] font-black text-[#37352F] uppercase tracking-widest min-w-[90px] text-center">
                 {monthLabel}
               </span>
+
               <button
                 onClick={() => changeMonth(1)}
                 className="p-1 hover:bg-[#F1F1EF] rounded-full text-[#787774] transition-colors"
@@ -139,7 +144,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ entries }) => {
                   </p>
                 </div>
               ) : (
-                currentMonthTags.map((tag: any, i: number) => {
+                currentMonthTags.map((tag, i) => {
                   const bgColor =
                     tag.count > 3 ? 'bg-[#98B68E]' : tag.count > 1 ? 'bg-[#C8D9C4]' : 'bg-[#E1EBDD]';
                   const textColor = tag.count > 3 ? 'text-white' : 'text-[#37352F]';
@@ -156,6 +161,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ entries }) => {
                 })
               )}
             </div>
+
             <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-white to-transparent pointer-events-none"></div>
           </div>
 
